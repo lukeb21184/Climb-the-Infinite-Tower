@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climb the Infinite Tower</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="game-canvas"></canvas>
+        <div id="ui">
+            <div id="score">Height: 0</div>
+            <div id="lives">Lives: 3</div>
+            <div id="customization-points">Points: 0</div>
+        </div>
+        <div id="start-screen">
+            <h1>Climb the Infinite Tower</h1>
+            <button id="start-btn">Start Climbing</button>
+            <div id="customization">
+                <h2>Customize Character</h2>
+                <div class="customization-options">
+                    <!-- Options will be added dynamically -->
+                </div>
+            </div>
+        </div>
+        <div id="game-over-screen" class="hidden">
+            <h1>Game Over</h1>
+            <p>You reached height: <span id="final-score">0</span></p>
+            <p>Earned <span id="earned-points">0</span> customization points</p>
+            <button id="restart-btn">Try Again</button>
+        </div>
+    </div>
+
+    <script src="js/player.js"></script>
+    <script src="js/ledge.js"></script>
+    <script src="js/enemy.js"></script>
+    <script src="js/pickup.js"></script>
+    <script src="js/game.js"></script>
+</body>
+</html>
