@@ -1,0 +1,14 @@
+/infinite-tower/
+├── index.html          # Main HTML file
+├── css/
+│   └── style.css       # CSS styles
+├── js/
+│   ├── game.js         # Main game logic
+│   ├── player.js       # Player class
+│   ├── ledge.js        # Ledge class
+│   ├── enemy.js        # Enemy class
+│   └── pickup.js       # Pickup class
+├── assets/
+│   ├── sprites/        # Character sprites
+│   └── sounds/         # Sound effects
+└── README.md           # Project documentation
