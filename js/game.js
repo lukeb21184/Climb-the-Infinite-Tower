@@ -1,4 +1,3 @@
-// Main game class
 class Game {
     constructor() {
         this.canvas = document.getElementById('game-canvas');
@@ -15,24 +14,42 @@ class Game {
         this.pickups = [];
         
         this.score = 0;
-        this.highestLedge = 0;
-        this.lives = 3;
+        this.highestLedge = this.gameHeight;
+        this.lives = 5; // Increased from 3 to 5
         this.customizationPoints = 0;
         
-        this.gameSpeed = 2;
-        this.spawnRate = 100;
+        this.gameSpeed = 1.5; // Reduced from 2
+        this.spawnRate = 80; // Increased spawn rate (lower number = more frequent)
         this.lastSpawn = 0;
+        this.difficultyIncreaseInterval = 2000; // Increased from 1000
+        this.lastDifficultyIncrease = 0;
         
         this.isRunning = false;
         this.animationId = null;
         
         this.setupEventListeners();
         this.loadCustomizationOptions();
+        
+        // Preload assets
+        this.assets = {
+            background: this.createGradientBackground()
+        };
+    }
+ 
+    createGradientBackground() {
+        const gradient = this.ctx.createLinearGradient(0, 0, 0, this.gameHeight);
+        gradient.addColorStop(0, '#1a2a6c');
+        gradient.addColorStop(0.5, '#b21f1f');
+        gradient.addColorStop(1, '#fdbb2d');
+        return gradient;
     }
     
     setupEventListeners() {
-        document.getElementById('start-btn').addEventListener('click', () => this.startGame());
-        document.getElementById('restart-btn').addEventListener('click', () => this.restartGame());
+        const startBtn = document.getElementById('start-btn');
+        const restartBtn = document.getElementById('restart-btn');
+        
+        startBtn.addEventListener('click', () => this.startGame());
+        restartBtn.addEventListener('click', () => this.restartGame());
         
         // Keyboard controls
         window.addEventListener('keydown', (e) => {
@@ -46,27 +63,45 @@ class Game {
                 this.player.jump();
             }
         });
+        
+        // Touch controls for mobile
+        this.canvas.addEventListener('touchstart', (e) => {
+            if (!this.isRunning) return;
+            
+            const touchX = e.touches[0].clientX - this.canvas.offsetLeft;
+            if (touchX < this.canvas.width / 2) {
+                this.player.moveLeft();
+            } else {
+                this.player.moveRight();
+            }
+            this.player.jump();
+        });
     }
     
     startGame() {
         this.score = 0;
-        this.highestLedge = 0;
-        this.lives = 3;
-        this.gameSpeed = 2;
+        this.highestLedge = this.gameHeight;
+        this.lives = 5; // Changed from 3 to 5
+        this.gameSpeed = 1.5; // Reduced from 2
         
         this.player.reset();
         this.ledges = [];
         this.enemies = [];
         this.pickups = [];
         
-        // Create initial ledge
-        this.addLedge(this.gameWidth / 2 - 50, this.gameHeight - 20, 100);
+        // Create initial ledge (wider)
+        this.addLedge(this.gameWidth / 2 - 75, this.gameHeight - 20, 150); // Wider initial ledge
         
         document.getElementById('start-screen').classList.add('hidden');
         document.getElementById('game-over-screen').classList.add('hidden');
         
+        // Update UI
+        document.getElementById('score').textContent = this.score;
+        document.getElementById('lives').textContent = this.lives;
+        document.getElementById('customization-points').textContent = this.customizationPoints;
+        
         this.isRunning = true;
-        this.lastTime = 0;
+        this.lastTime = performance.now();
         this.animationId = requestAnimationFrame((timestamp) => this.gameLoop(timestamp));
     }
     
@@ -107,10 +142,12 @@ class Game {
             // Check collision with player
             if (this.checkCollision(this.player, this.enemies[i])) {
                 this.lives--;
+                document.getElementById('lives').textContent = this.lives;
                 this.enemies.splice(i, 1);
                 
                 if (this.lives <= 0) {
                     this.gameOver();
+                    return;
                 }
             }
             
@@ -144,15 +181,20 @@ class Game {
             this.lastSpawn += deltaTime;
         }
         
+        // Increase difficulty over time (slower)
+        if (this.lastDifficultyIncrease > this.difficultyIncreaseInterval) {
+            this.gameSpeed += 0.05; // Reduced from 0.1
+            this.lastDifficultyIncrease = 0;
+        } else {
+            this.lastDifficultyIncrease += deltaTime;
+        }
+        
         // Update score based on highest ledge
         if (this.player.y < this.highestLedge) {
             this.highestLedge = this.player.y;
-            this.score = Math.floor(-this.highestLedge / 10);
-            document.getElementById('score').textContent = `Height: ${this.score}`;
+            this.score = Math.floor((this.gameHeight - this.highestLedge) / 10);
+            document.getElementById('score').textContent = this.score;
         }
-        
-        // Increase difficulty as score increases
-        this.gameSpeed = 2 + Math.floor(this.score / 1000) * 0.5;
     }
     
     draw() {
@@ -160,7 +202,7 @@ class Game {
         this.ctx.clearRect(0, 0, this.gameWidth, this.gameHeight);
         
         // Draw background
-        this.ctx.fillStyle = '#333';
+        this.ctx.fillStyle = this.assets.background;
         this.ctx.fillRect(0, 0, this.gameWidth, this.gameHeight);
         
         // Draw ledges
@@ -177,21 +219,21 @@ class Game {
     }
     
     spawnObjects() {
-        // Spawn new ledge
-        const ledgeX = Math.random() * (this.gameWidth - 100);
+        // Spawn new ledge (wider and more frequent)
+        const ledgeX = Math.random() * (this.gameWidth - 150); // More space for ledges
         const ledgeY = -20;
-        const ledgeWidth = 50 + Math.random() * 50;
+        const ledgeWidth = 80 + Math.random() * 70; // Wider ledges (80-150px)
         this.addLedge(ledgeX, ledgeY, ledgeWidth);
         
-        // Spawn enemy (10% chance)
-        if (Math.random() < 0.1) {
+        // Spawn enemy (5% chance, reduced from 10%)
+        if (Math.random() < 0.05) {
             const enemyX = Math.random() * (this.gameWidth - 30);
             const enemyY = -30;
             this.addEnemy(enemyX, enemyY);
         }
         
-        // Spawn pickup (5% chance)
-        if (Math.random() < 0.05) {
+        // Spawn pickup (10% chance, increased from 5%)
+        if (Math.random() < 0.1) {
             const pickupX = Math.random() * (this.gameWidth - 20);
             const pickupY = -20;
             const pickupTypes = ['life', 'speed', 'points'];
@@ -222,8 +264,8 @@ class Game {
     applyPickup(type) {
         switch (type) {
             case 'life':
-                this.lives++;
-                document.getElementById('lives').textContent = `Lives: ${this.lives}`;
+                this.lives = Math.min(this.lives + 1, 5);
+                document.getElementById('lives').textContent = this.lives;
                 break;
             case 'speed':
                 this.player.jumpPower += 1;
@@ -232,8 +274,9 @@ class Game {
                 }, 10000);
                 break;
             case 'points':
-                this.customizationPoints += 50;
-                document.getElementById('customization-points').textContent = `Points: ${this.customizationPoints}`;
+                const points = 50 + Math.floor(this.score / 100) * 10;
+                this.customizationPoints += points;
+                document.getElementById('customization-points').textContent = this.customizationPoints;
                 break;
         }
     }
@@ -243,12 +286,12 @@ class Game {
         cancelAnimationFrame(this.animationId);
         
         // Award customization points based on score
-        const earnedPoints = Math.floor(this.score / 10);
+        const earnedPoints = Math.floor(this.score / 5);
         this.customizationPoints += earnedPoints;
         
         document.getElementById('final-score').textContent = this.score;
         document.getElementById('earned-points').textContent = earnedPoints;
-        document.getElementById('customization-points').textContent = `Points: ${this.customizationPoints}`;
+        document.getElementById('customization-points').textContent = this.customizationPoints;
         
         document.getElementById('game-over-screen').classList.remove('hidden');
         
@@ -261,11 +304,12 @@ class Game {
         optionsContainer.innerHTML = '';
         
         const options = [
-            { id: 'hat1', name: 'Cool Hat', cost: 100, sprite: 'hat1' },
-            { id: 'hat2', name: 'Wizard Hat', cost: 200, sprite: 'hat2' },
-            { id: 'color1', name: 'Red Outfit', cost: 150, sprite: 'color1' },
-            { id: 'color2', name: 'Blue Outfit', cost: 150, sprite: 'color2' },
-            { id: 'speed', name: 'Permanent Speed+', cost: 500, sprite: 'speed' }
+            { id: 'hat1', name: 'Cool Hat', cost: 100, emoji: '🧢' },
+            { id: 'hat2', name: 'Wizard Hat', cost: 200, emoji: '🧙' },
+            { id: 'color1', name: 'Red Outfit', cost: 150, emoji: '🔴' },
+            { id: 'color2', name: 'Blue Outfit', cost: 150, emoji: '🔵' },
+            { id: 'speed', name: 'Permanent Speed+', cost: 500, emoji: '⚡' },
+            { id: 'doubleJump', name: 'Double Jump', cost: 750, emoji: '🦘' }
         ];
         
         options.forEach(option => {
@@ -274,15 +318,19 @@ class Game {
             optionElement.dataset.id = option.id;
             
             optionElement.innerHTML = `
-                <img src="assets/sprites/${option.sprite}.png" alt="${option.name}">
+                <div class="emoji">${option.emoji}</div>
                 <p>${option.name}</p>
-                <p>Cost: ${option.cost}</p>
+                <p class="cost">${option.cost} pts</p>
             `;
             
-            if (!this.player.customizations.includes(option.id) && this.customizationPoints >= option.cost) {
-                optionElement.addEventListener('click', () => {
-                    this.purchaseCustomization(option.id, option.cost);
-                });
+            if (!this.player.customizations.includes(option.id)) {
+                if (this.customizationPoints >= option.cost) {
+                    optionElement.addEventListener('click', () => {
+                        this.purchaseCustomization(option.id, option.cost);
+                    });
+                } else {
+                    optionElement.classList.add('disabled');
+                }
             }
             
             optionsContainer.appendChild(optionElement);
@@ -297,9 +345,11 @@ class Game {
             // Apply the customization
             if (id === 'speed') {
                 this.player.jumpPower += 0.5;
+            } else if (id === 'doubleJump') {
+                this.player.canDoubleJump = true;
             }
             
-            document.getElementById('customization-points').textContent = `Points: ${this.customizationPoints}`;
+            document.getElementById('customization-points').textContent = this.customizationPoints;
             this.loadCustomizationOptions();
         }
     }
