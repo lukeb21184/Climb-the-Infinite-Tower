@@ -4,34 +4,167 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Climb the Infinite Tower</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Roboto:wght@400;700&display=swap">
     <link rel="stylesheet" href="css/style.css">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        #game-container {
+            position: relative;
+            width: 400px;
+            margin: auto;
+        }
+
+        canvas {
+            display: block;
+            background: black;
+        }
+
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            display: flex;
+            gap: 15px;
+            color: white;
+            font-weight: bold;
+        }
+
+        .ui-element {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            text-align: center;
+            z-index: 10;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .screen-content {
+            max-width: 300px;
+        }
+
+        .btn {
+            background-color: #fdbb2d;
+            border: none;
+            padding: 10px 20px;
+            margin-top: 20px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .controls-info p {
+            margin: 5px 0;
+        }
+
+        .key {
+            background: #fff;
+            color: #000;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .customization-options {
+            margin-top: 10px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .customization-option {
+            background: #222;
+            border: 1px solid #fff;
+            padding: 8px;
+            border-radius: 5px;
+            width: 80px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .customization-option.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .customization-option.selected {
+            border-color: lime;
+        }
+    </style>
 </head>
 <body>
     <div id="game-container">
-        <canvas id="game-canvas"></canvas>
+        <canvas id="game-canvas" width="400" height="600"></canvas>
+
         <div id="ui">
-            <div id="score">Height: 0</div>
-            <div id="lives">Lives: 3</div>
-            <div id="customization-points">Points: 0</div>
+            <div class="ui-element">
+                <span class="ui-icon">🏔️</span>
+                <span id="score">0</span>
+            </div>
+            <div class="ui-element">
+                <span class="ui-icon">❤️</span>
+                <span id="lives">3</span>
+            </div>
+            <div class="ui-element">
+                <span class="ui-icon">🪙</span>
+                <span id="customization-points">0</span>
+            </div>
         </div>
-        <div id="start-screen">
-            <h1>Climb the Infinite Tower</h1>
-            <button id="start-btn">Start Climbing</button>
-            <div id="customization">
-                <h2>Customize Character</h2>
-                <div class="customization-options">
-                    <!-- Options will be added dynamically -->
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="screen-content">
+                <h1>CLIMB THE INFINITE TOWER</h1>
+                <div class="controls-info">
+                    <p>Use <span class="key">←</span> <span class="key">→</span> to move</p>
+                    <p>Press <span class="key">SPACE</span> or <span class="key">↑</span> to jump</p>
+                </div>
+                <button id="start-btn" class="btn">START CLIMBING</button>
+                <div id="customization">
+                    <h2>CUSTOMIZATION SHOP</h2>
+                    <div class="customization-options">
+                        <!-- Dynamically filled -->
+                    </div>
                 </div>
             </div>
         </div>
-        <div id="game-over-screen" class="hidden">
-            <h1>Game Over</h1>
-            <p>You reached height: <span id="final-score">0</span></p>
-            <p>Earned <span id="earned-points">0</span> customization points</p>
-            <button id="restart-btn">Try Again</button>
+
+        <!-- Game Over Screen -->
+        <div id="game-over-screen" class="screen hidden">
+            <div class="screen-content">
+                <h1>GAME OVER</h1>
+                <div class="results">
+                    <p>Height Reached: <span id="final-score">0</span>m</p>
+                    <p>Points Earned: <span id="earned-points">0</span></p>
+                </div>
+                <button id="restart-btn" class="btn">TRY AGAIN</button>
+            </div>
         </div>
     </div>
 
+    <!-- Scripts (in order) -->
     <script src="js/player.js"></script>
     <script src="js/ledge.js"></script>
     <script src="js/enemy.js"></script>
